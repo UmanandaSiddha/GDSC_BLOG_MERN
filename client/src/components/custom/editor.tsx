@@ -10,6 +10,9 @@ import {
     MenubarTrigger,
 } from '@/components/ui/menubar';
 import { TiptapContext } from '@/context/tiptap_context';
+import { useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const TableMenu = ({ editor }: any) => [
     {
@@ -416,6 +419,8 @@ const MenuBar = ({ setImageURL }: any) => {
 
     const { editor } = useContext(TiptapContext);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [uploadLoading, setUploadLoading] = useState(false);
 
     if (!editor) {
         return null;
@@ -423,17 +428,38 @@ const MenuBar = ({ setImageURL }: any) => {
 
     const MenuBarIconValue = MenuBarIcon({ editor });
 
-    const handleImageChange = (e: any) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (typeof reader.result === 'string') {
-                    setImageURL(reader.result);
-                }
-            };
-            reader.readAsDataURL(file);
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        // if (file) {
+        //     const reader = new FileReader();
+        //     reader.onloadend = () => {
+        //         if (typeof reader.result === 'string') {
+        //             setImageURL(reader.result);
+        //         }
+        //     };
+        //     reader.readAsDataURL(file);
+        // }
+
+        if (!file) return;
+        
+        setUploadLoading(true);
+        const formData = new FormData();
+        formData.append('blogs', file);
+
+        try {
+            const id = searchParams.get("id");
+            const link = id ? `${import.meta.env.VITE_BASE_URL}/blog/upload/blog?id=${id}` : `${import.meta.env.VITE_BASE_URL}/blog/upload/blog`
+            const { data } = await axios.post(link, formData, { headers: { 'Content-Type': 'multipart/form-data' }, withCredentials: true });
+            setSearchParams({ type: 'edit', id: data.data.blogId }, { replace: true });
+            if (data) {
+                setImageURL(data.data.file);
+            }
+            toast.success('File uploaded successfully');
+        } catch (error: any) {
+            setUploadLoading(false);
+            toast.error(error.response.data.message);
         }
+        setUploadLoading(false);
     };
 
     const handleIconClick = () => {
@@ -511,6 +537,7 @@ const Tiptap = ({ isEditable }: { isEditable: boolean }) => {
             editor.commands.setImage({
                 src: imageURL,
             });
+            // editor.chain().focus().setImage({ src: imageURL }).run();
         }
     }, [imageURL]);
 

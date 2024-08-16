@@ -44,6 +44,7 @@ interface Blog {
     content: string;
     image: string;
     isPrivate: boolean;
+    category: string;
     disableComments: boolean;
     blogImages: string[];
     author: {
@@ -63,4 +64,18 @@ interface AllBlogResponse {
 interface BlogResponseById {
     success: boolean;
     blog: Blog;
+}
+
+interface Category {
+    _id: string;
+    name: string;
+    post: string[];
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+interface AllCategoriesResponse {
+    success: boolean;
+    category: Category[];
+    count: number;
 }

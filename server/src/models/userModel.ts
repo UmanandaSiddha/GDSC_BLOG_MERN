@@ -16,6 +16,12 @@ export const accountEnum = {
     GITHUB: "github",
 };
 
+export const requestEnum = {
+    PENDING: "pending",
+    ACCEPTED: "accepted",
+    REJECTED: "rejected",
+}
+
 export interface IUser extends Document {
     _id: mongoose.Schema.Types.ObjectId;
     name: string;
@@ -26,6 +32,7 @@ export interface IUser extends Document {
     bio?: string;
     isVerified: boolean;
     isBlocked?: boolean;
+    request?: string
     account: string[];
     googleId?: string;
     githubId?: string;
@@ -68,6 +75,10 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
             type: String,
             enum: Object.values(roleEnum),
             default: roleEnum.USER,
+        },
+        request: {
+            type: String,
+            enum: Object.values(roleEnum),
         },
         socials: {
             type: [

@@ -43,6 +43,8 @@ export const uploadCoverImage = catchAsyncErrors(async (req: CustomRequest, res:
         return next(new ErrorHandler("User not found", 404));
     }
 
+    const { title, description, content, category } = req.body;
+
     let blog;
     if (req.query.id) {
         const blogExits = await Blog.findByIdAndUpdate(req.query.id);
@@ -67,9 +69,10 @@ export const uploadCoverImage = catchAsyncErrors(async (req: CustomRequest, res:
         }
     } else {
         blog = await Blog.create({
-            title: "This is a system generated title because of the absence of title",
-            description: "This is a system generated description because of the absence of description",
-            content: "<p>This is a system generated content because of the absence of content</p>",
+            title: title || "This is a system generated title because of the absence of title",
+            description: description || "This is a system generated description because of the absence of description",
+            content: content || "<p>This is a system generated content because of the absence of content</p>",
+            category,
             image: filename,
             author: user._id,
         });
@@ -104,8 +107,9 @@ export const uploadBlogImage = catchAsyncErrors(async (req: CustomRequest, res: 
         blog = await Blog.create({
             title: "This is a system generated title because of the absence of title",
             description: "This is a system generated description because of the absence of description",
-            content: "<p>This is a system generated content because of the absence of content</p>",
-            $push: { blogImages: filename },
+            content: `<p><img src=${filename} alt=""></p>`,
+            image: "https://via.placeholder.com/800x400",
+            blogImages: [filename],
             author: user._id,
         });
     }
@@ -160,7 +164,7 @@ export const getUserBlogs = catchAsyncErrors(async (req: CustomRequest, res: Res
         return next(new ErrorHandler("User not found", 404));
     }
 
-    const blogs = await Blog.find({ author: user._id });
+    const blogs = await Blog.find({ author: user._id }).populate("author", "name avatar").sort({ $natural: -1 });
     const count = await Blog.countDocuments({ author: user._id });
 
     res.status(200).json({
@@ -174,7 +178,12 @@ export const getAllBlogs = catchAsyncErrors(async (req: Request, res: Response, 
     const resultPerPage = 10;
     const count = await Blog.countDocuments();
 
-    const apiFeatures = new ApiFeatures(Blog.find().populate("author", "name avatar").sort({ $natural: -1 }), req.query).search().filter();
+    const apiFeatures = new ApiFeatures(
+        Blog.find().populate("author", "name avatar").sort({ $natural: -1 }),
+        req.query
+    )
+    .searchBlog()
+    .filter();
 
     // let link = `/api/v1/products?keyword=${keyword}&page=${currentPage}&price[gte]=${price[0]}&price[lte]=${price[1]}&ratings[gte]=${ratings}`;
 
@@ -198,7 +207,7 @@ export const getAllBlogs = catchAsyncErrors(async (req: Request, res: Response, 
 });
 
 export const getBlogById = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findById(req.params.id).populate("author", "name avatar");
     if (!blog) {
         return next(new ErrorHandler("Blog not found", 404));
     }
@@ -223,7 +232,7 @@ export const updateBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
     const { title, description, content, isPrivate, disableComments, category } = req.body;
 
     if (category) {
-        const categoryExists = await Category.findOne({ name: category,  $options: "i" });
+        const categoryExists = await Category.findOne({ name: { $regex: category, $options: "i"} });
         if (!categoryExists) {
             await Category.create({
                 name: category,
@@ -242,8 +251,8 @@ export const updateBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
         title: title || blog.title,
         description: description || blog.description,
         content: content || blog.content,
-        isPrivate: Boolean(isPrivate) || blog.isPrivate,
-        disableComments: Boolean(disableComments) || blog.disableComments,
+        isPrivate: Boolean(isPrivate),
+        disableComments: Boolean(disableComments),
         category: category || blog.category
     }
 
@@ -276,5 +285,16 @@ export const deleteBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
     res.status(200).json({
         success: true,
         message: "Blog deleted successfully"
+    });
+});
+
+export const getCategory = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const category = await Category.find();
+    const count = category.length;
+
+    res.status(200).json({
+        success: true,
+        category,
+        count
     });
 });

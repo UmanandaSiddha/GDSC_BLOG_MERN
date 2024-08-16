@@ -8,8 +8,8 @@ import { useUser } from '@/context/user_context';
 const navigation = [
     { name: 'Home', to: '/' },
     { name: 'Blogs', to: '/blogs' },
-    { name: 'About Us', to: '/about' },
-    { name: 'Dashboard', to: '/dashboard' },
+    { name: 'About Us', to: 'https://gdsc-features.vercel.app/' },
+    { name: 'Author', to: '/authors' },
 ];
 
 const Navbar = () => {

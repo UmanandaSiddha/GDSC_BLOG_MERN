@@ -7,8 +7,9 @@ body {
     padding: 0;
     background-color: whitesmoke;
 }
-  
+
 @layer base {
+
     input[type="number"]::-webkit-inner-spin-button,
     input[type="number"]::-webkit-outer-spin-button {
         -webkit-appearance: none;
@@ -32,4 +33,33 @@ body {
 
 body.no-scroll {
     overflow: hidden;
+}
+
+
+.toggle-bg {
+    width: 3.5rem;
+    height: 2rem;
+    background-color: #4b5563;
+    border-radius: 9999px;
+    position: relative;
+    transition: background-color 0.3s ease-in-out;
+}
+
+.toggle-dot {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 9999px;
+    transition: transform 0.3s ease-in-out;
+}
+
+input[type="checkbox"]:checked+.toggle-bg .toggle-dot {
+    transform: translateX(1.5rem);
+}
+
+input[type="checkbox"]:checked+.toggle-bg {
+    background-color: #10b981;
 }

@@ -5,6 +5,7 @@ import {
     deleteBlogImage, 
     getAllBlogs, 
     getBlogById, 
+    getCategory, 
     getUserBlogs, 
     updateBlog, 
     uploadBlogImage, 
@@ -18,7 +19,8 @@ const router = express.Router();
 
 router.route("/all").get(getAllBlogs);
 router.route("/:id").get(getBlogById);
-router.route("/user").get(isAuthenticatedUser, isUserVerified, getUserBlogs);
+router.route("/cat").put(getCategory);
+router.route("/user").put(isAuthenticatedUser, isUserVerified, getUserBlogs);
 router.route("/create").post(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.CREATOR, roleEnum.ADMIN), createBlog);
 router.route("/edit/:id")
     .put(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.CREATOR, roleEnum.ADMIN), updateBlog)

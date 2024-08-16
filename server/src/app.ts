@@ -8,6 +8,7 @@ import ErrorMiddleware from "./middlewares/error.js";
 
 import user from "./routes/userRoute.js";
 import blog from "./routes/blogRoute.js";
+import admin from "./routes/adminRoute.js";
 
 const app: Application = express();
 
@@ -39,6 +40,7 @@ app.use(express.static("public"));
 
 app.use("/api/v1/user", user);
 app.use("/api/v1/blog", blog);
+app.use("/api/v1/admin", admin);
 
 app.use(ErrorMiddleware);
 

@@ -10,7 +10,7 @@ export interface IBlog extends Document {
     comments: number;
     views: number;
     isPrivate: boolean;
-    category?: mongoose.Schema.Types.ObjectId;
+    category?: string;
     disableComments: boolean;
     blogImages: string[];
     author: mongoose.Schema.Types.ObjectId;
@@ -37,8 +37,7 @@ const blogSchema: Schema<IBlog> = new mongoose.Schema(
             required: true,
         },
         category: {
-            type: mongoose.Schema.ObjectId,
-            ref: "Category",
+            type: String,
             required: false,
         },
         isPrivate: {

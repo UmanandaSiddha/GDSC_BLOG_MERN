@@ -1,6 +1,6 @@
 import ErrorHandler from "../utils/errorHandler.js";
 import catchAsyncErrors from "../middlewares/catchAsyncErrors.js";
-import User, { roleEnum, accountEnum } from "../models/userModel.js";
+import User, { roleEnum, accountEnum, requestEnum } from "../models/userModel.js";
 import sendToken from "../utils/jwtToken.js";
 import crypto from "crypto";
 import fs from "fs";
@@ -292,6 +292,25 @@ export const forgotPassword = catchAsyncErrors(async (req: Request, res: Respons
     await user.save();
 
     sendToken(user, 200, res);
+});
+
+// Request to become Creator
+export const createCreatorRequest = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+    }
+
+    await User.findByIdAndUpdate(
+        req.user?._id, 
+        { request: requestEnum.PENDING },
+        { new: true, runValidators: true, useFindAndModify: false }
+    );
+
+    res.status(200).json({
+        success: true,
+        message: "Creator Request Added"
+    });
 });
 
 // Update Profile

@@ -22,7 +22,7 @@ const AuthorPage = () => {
     }, [])
 
     return (
-        <div className='flex flex-col items-center justify-center bg-white dark:bg-gray-900'>
+        <div className='flex flex-col mt-12 items-center justify-center bg-white dark:bg-gray-900'>
             <div className="flex flex-col justify-center items-center mt-16 gap-5">
                 <div className='h-32 w-32 rounded-full border-2 flex justify-center items-center'>
                     <img width={100} height={100} className="object-cover text-center rounded-full" src="https://github.com/shadcn.png" alt="" />

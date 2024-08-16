@@ -1,9 +1,10 @@
 import BlogGroup from '@/components/custom/blog-group';
 import { useUser } from '@/context/user_context';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { FaCamera } from "react-icons/fa";
 
 const Profile = () => {
 
@@ -12,7 +13,8 @@ const Profile = () => {
 
     const fetchBlogs = async () => {
         try {
-            const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/all?page=1`, { withCredentials: true });
+            const { data }: { data: AllBlogResponse } = await axios.put(`${import.meta.env.VITE_BASE_URL}/blog/user`, { test: "test" }, { withCredentials: true });
+            console.log(data);
             setBlogs(data.blogs);
         } catch (error: any) {
             toast.error(error.response.data.message);
@@ -21,18 +23,47 @@ const Profile = () => {
 
     useEffect(() => {
         fetchBlogs();
-    }, [])
+    }, []);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+    const handleIconClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setSelectedFile(URL.createObjectURL(file));
+            console.log(URL.createObjectURL(file));
+            console.log(file);
+        }
+    };
 
     return (
-        <div className='flex flex-col items-center mt-8 justify-center bg-white dark:bg-gray-900'>
+        <div className='flex flex-col items-center mt-12 justify-center bg-white dark:bg-gray-900'>
             <div className="flex flex-col justify-center items-center mt-16 gap-5">
                 <div className='relative h-32 w-32 rounded-full border-2 flex justify-center items-center'>
-                    <img height={100} width={100} className="object-cover text-center rounded-full" src="https://github.com/shadcn.png" alt="" />
-                    <button className="absolute bottom-0 right-0 bg-slate-300 text-black rounded-full p-1">
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M17.414 2.586a2 2 0 112.828 2.828L6.828 18.828l-4 1 1-4L17.414 2.586zM19 5l-1-1L16 6l1 1 2-2zM5 18v-2.5L15.5 5 18 7.5 7.5 18H5z" fill="currentColor" />
-                        </svg>
-                    </button>
+                    {userContext?.user?.avatar ? (
+                        <img height={100} width={100} className="object-cover h-24 w-24 text-center rounded-full" src={selectedFile || userContext?.user?.avatar} alt="" />
+                    ) : (
+                        <div className='flex h-24 w-24 justify-center items-center bg-gray-300 rounded-full'>
+                            <p className='text-center text-3xl font-semibold'>{userContext?.user?.name.split(' ').map(word => word[0]).join('')}</p>
+                        </div>
+                    )}
+                    <div onClick={handleIconClick} className="absolute border border-slate-300 bottom-0 right-0 bg-slate-200 text-black rounded-full p-2">
+                        <FaCamera size={20} />
+                    </div>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                    />
                 </div>
                 <div className='flex flex-col justify-center items-center'>
                     <h1 className="text-2xl font-semibold text-gray-800 dark:text-white lg:text-3xl">{userContext?.user?.name}</h1>
@@ -73,16 +104,31 @@ const Profile = () => {
                             </svg>
                         </Link>
                     </div>
+
+                    <div className='flex justify-center items-center m-4 gap-4'>
+                        <button onClick={() => {}} className="relative px-5 py-3 overflow-hidden font-medium text-gray-600 bg-gray-100 border border-gray-100 rounded-lg shadow-inner group">
+                            <span className="absolute top-0 left-0 w-0 h-0 transition-all duration-200 border-t-2 border-gray-600 group-hover:w-full ease"></span>
+                            <span className="absolute bottom-0 right-0 w-0 h-0 transition-all duration-200 border-b-2 border-gray-600 group-hover:w-full ease"></span>
+                            <span className="absolute top-0 left-0 w-full h-0 transition-all duration-300 delay-200 bg-gray-600 group-hover:h-full ease"></span>
+                            <span className="absolute bottom-0 left-0 w-full h-0 transition-all duration-300 delay-200 bg-gray-600 group-hover:h-full ease"></span>
+                            <span className="absolute inset-0 w-full h-full duration-300 delay-300 bg-gray-900 opacity-0 group-hover:opacity-100"></span>
+                            <span className="relative transition-colors duration-300 delay-200 group-hover:text-white ease">Edit Profile</span>
+                        </button>
+                        <Link to="/create" className="rounded-md px-3.5 py-2.5 m-1 overflow-hidden relative group cursor-pointer border-2 font-medium border-indigo-600 text-indigo-600">
+                            <span className="absolute w-64 h-0 transition-all duration-300 origin-center rotate-45 -translate-x-20 bg-indigo-600 top-1/2 group-hover:h-64 group-hover:-translate-y-32 ease"></span>
+                            <span className="relative text-indigo-600 transition duration-300 group-hover:text-white ease">Create New Blog</span>
+                        </Link>
+                    </div>
                 </div>
             </div>
             <div className='w-[85%] mt-8 px-2 md:px-6 lg:px-16 mx-auto'>
                 <hr className="rounded-full border-2 border-gray-400 dark:border-gray-100" />
                 <div className='flex justify-between items-center m-4'>
                     <p className='text-gray-800 text-2xl font-semibold'>My Blogs</p>
-                    <Link to="/create" className="rounded-md px-3.5 py-2 m-1 overflow-hidden relative group cursor-pointer border-2 font-medium border-indigo-600 text-indigo-600">
+                    {/* <Link to="/create" className="rounded-md px-3.5 py-2 m-1 overflow-hidden relative group cursor-pointer border-2 font-medium border-indigo-600 text-indigo-600">
                         <span className="absolute w-64 h-0 transition-all duration-300 origin-center rotate-45 -translate-x-20 bg-indigo-600 top-1/2 group-hover:h-64 group-hover:-translate-y-32 ease"></span>
                         <span className="relative text-indigo-600 transition duration-300 group-hover:text-white ease">Create New</span>
-                    </Link>
+                    </Link> */}
                 </div>
                 <hr className="rounded-full border-2 border-gray-400 dark:border-gray-100" />
             </div>

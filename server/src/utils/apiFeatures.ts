@@ -16,13 +16,34 @@ class ApiFeatures<T extends Document> {
         this.queryStr = queryStr;
     }
 
-    search() {
+    searchBlog() {
         const keyword = this.queryStr.keyword
             ? {
                 title: {
                     $regex: this.queryStr.keyword,
                     $options: "i",
                 },
+                // $or: [
+                //     { title: { $regex: this.queryStr.keyword, $options: "i" } },
+                //     { "author.name": { $regex: this.queryStr.keyword, $options: "i" } }
+                // ]
+            } : {};
+
+        this.query = this.query.find({ ...keyword });
+        return this;
+    }
+
+    searchUser() {
+        const keyword = this.queryStr.keyword
+            ? {
+                email: {
+                    $regex: this.queryStr.keyword,
+                    $options: "i",
+                },
+                // $or: [
+                //     { name: { $regex: this.queryStr.keyword, $options: "i" } },
+                //     { email: { $regex: this.queryStr.keyword, $options: "i" } }
+                // ]
             } : {};
 
         this.query = this.query.find({ ...keyword });

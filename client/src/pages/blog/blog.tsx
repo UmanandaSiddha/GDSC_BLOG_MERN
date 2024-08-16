@@ -21,7 +21,7 @@ const BlogPost = () => {
     const id = searchParams.get("id");
     const [post, setPost] = useState<Blog>();
     const { editor } = useContext(TiptapContext);
-    const [content, setContent] = useState("<p></p>");
+    const [blogContent, setBlogContent] = useState("<p></p>");
 
     if (!editor) {
         return null;
@@ -66,7 +66,7 @@ const BlogPost = () => {
             if (id) {
                 const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/${id}`, { withCredentials: true });
                 setPost(data.blog);
-                setContent(data.blog.content);
+                setBlogContent(data.blog.content);
             }
         } catch (error: any) {
             toast.error(error.response.data.message);
@@ -78,9 +78,9 @@ const BlogPost = () => {
     }, [id])
 
     useEffect(() => {
-        // editor?.chain().focus().insertContent(content).run();
+        editor?.commands.setContent(blogContent);
         editor?.setEditable(false);
-    }, [content, editor]);
+    }, [blogContent, editor]);
 
     return !post ? <Loader /> : (
         <div className='bg-white'>
@@ -89,20 +89,23 @@ const BlogPost = () => {
                     {/* Blog Section */}
                     <div className="w-full lg:w-4/6">
                         <img src={post ? post.image : "https://via.placeholder.com/800x400"} alt="Cover" className="w-full h-84 object-cover rounded-lg" />
-                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mt-6">Give Your Space a Parisian - Inspired Makeover</h1>
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mt-6">{post?.title}</h1>
+                        <p className='mt-4 text-md italic text-gray-600'>{post?.description}</p>
                         <div className='mt-8 mb-8 flex flex-wrap items-center gap-2 md:gap-0 space-x-2'>
                             <Avatar className='h-8 w-8'>
-                                <AvatarImage src={post?.author.avatar} alt="" />
-                                <AvatarFallback>US</AvatarFallback>
+                                <AvatarImage src={post.author?.avatar} alt="" />
+                                <AvatarFallback>{post.author.name.split(' ').map(word => word[0]).join('')}</AvatarFallback>
                             </Avatar>
-                            <p className="text-md text-gray-600 dark:text-gray-400">{post?.author.name}</p>
+                            <p className="text-md text-gray-600 dark:text-gray-400">{post?.author?.name}</p>
                             <p className="text-md text-gray-600 dark:text-gray-400">•</p>
                             <p className="text-md text-gray-600 dark:text-gray-400">{String(new Date(post?.createdAt).toDateString())}</p>
                             <p className="text-md text-gray-600 dark:text-gray-400">•</p>
                             <p className="text-md text-gray-600 dark:text-gray-400">12 min read</p>
-                            <div className="inline-block px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold">Technology</div>
+                            {post.category && (
+                                <div className="inline-block px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold">{post.category}</div>
+                            )}
                         </div>
-                        <div className="mt-4 text-gray-600">
+                        <div className="mt-4 text-gray-600 border border-gray-300 rounded-xl">
                             <EditorContent
                                 className="w-full p-3"
                                 editor={editor}
@@ -169,16 +172,18 @@ const BlogPost = () => {
                                 </div>
                             </div>
                             <div className="space-y-4 max-h-[60vh] overflow-y-auto hide-scrollbar">
-                                <div className='flex gap-2'>
-                                    <Avatar className='h-8 w-8'>
-                                        <AvatarImage src="https://via.placeholder.com/150" alt="" />
-                                        <AvatarFallback>US</AvatarFallback>
-                                    </Avatar>
-                                    <div className="p-4 w-full bg-gray-100 rounded-lg">
-                                        <p className="text-sm font-semibold text-gray-500">John Doe • Jan 1, 2024</p>
-                                        <p className="text-sm text-gray-800">This Lorem ipsum dolor sit amet consectetur adipisicing elit. Est, reiciendis. is a sample comment. Great blog post!</p>
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(item => (
+                                    <div key={item} className='flex gap-2'>
+                                        <Avatar className='h-8 w-8'>
+                                            <AvatarImage src="https://via.placeholder.com/150" alt="" />
+                                            <AvatarFallback>US</AvatarFallback>
+                                        </Avatar>
+                                        <div className="p-4 w-full bg-gray-100 rounded-lg">
+                                            <p className="text-sm font-semibold text-gray-500">John Doe • Jan 1, 2024</p>
+                                            <p className="text-sm text-gray-800">This Lorem ipsum dolor sit amet consectetur adipisicing elit. Est, reiciendis. is a sample comment. Great blog post!</p>
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
                     </div>

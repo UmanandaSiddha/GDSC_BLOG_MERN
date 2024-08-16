@@ -7,6 +7,10 @@ module.exports = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
+  safelist: [
+    'translate-x-0',
+    'translate-x-6',
+  ],
   theme: {
     container: {
       center: true,
