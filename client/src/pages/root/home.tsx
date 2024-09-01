@@ -37,12 +37,11 @@ const Home = () => {
                     </div>
                 </header>
 
-                <button onClick={handleScroll} className='mt-24 mb-12 flex flex-col items-center'>
+                <button onClick={handleScroll} className='mt-24 mb-12 flex flex-col justify-center items-center'>
                     <LuMouse size={30} />
                     <span>Scroll Down</span>
                 </button>
             </div>
-
 
             <HomeBlog />
 

@@ -13,6 +13,7 @@ import { TiptapContext } from '@/context/tiptap_context';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { Loader2 } from 'lucide-react';
 
 const TableMenu = ({ editor }: any) => [
     {
@@ -430,15 +431,6 @@ const MenuBar = ({ setImageURL }: any) => {
 
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        // if (file) {
-        //     const reader = new FileReader();
-        //     reader.onloadend = () => {
-        //         if (typeof reader.result === 'string') {
-        //             setImageURL(reader.result);
-        //         }
-        //     };
-        //     reader.readAsDataURL(file);
-        // }
 
         if (!file) return;
         
@@ -515,13 +507,19 @@ const MenuBar = ({ setImageURL }: any) => {
                 </div>
             ))}
             <div className="cursor-pointer hover:bg-gray-500 hover:rounded-lg p-1">
-                <input
-                    type="file"
-                    onChange={handleImageChange}
-                    ref={fileInputRef}
-                    className="hidden"
-                />
-                <Icons.image onClick={handleIconClick} />
+                {uploadLoading ? (
+                    <Loader2 />
+                ) : (
+                    <>
+                        <input
+                            type="file"
+                            onChange={handleImageChange}
+                            ref={fileInputRef}
+                            className="hidden"
+                        />
+                        <Icons.image onClick={handleIconClick} />
+                    </>
+                )}
             </div>
         </div>
     )
@@ -537,7 +535,6 @@ const Tiptap = ({ isEditable }: { isEditable: boolean }) => {
             editor.commands.setImage({
                 src: imageURL,
             });
-            // editor.chain().focus().setImage({ src: imageURL }).run();
         }
     }, [imageURL]);
 
@@ -561,20 +558,6 @@ const Tiptap = ({ isEditable }: { isEditable: boolean }) => {
             editor.setEditable(isEditable);
         }
     }, [editor, isEditable]);
-
-    // const hanldeCopy = () => {
-    //     const html = editor.getHTML();
-    //     console.log(html)
-    //     navigator.clipboard.writeText(html);
-    // }
-
-    // const addImage = useCallback(() => {
-    //     const url = window.prompt('URL')
-
-    //     if (url) {
-    //         editor.chain().focus().setImage({ src: url }).run()
-    //     }
-    // }, [editor]);
 
     return (
         <div className='w-full'>

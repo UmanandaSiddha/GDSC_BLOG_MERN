@@ -3,6 +3,8 @@ import axios from "axios";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from "@/config/firebase";
 
 const AuthForm = ({ type }: { type: string }) => {
 
@@ -17,7 +19,7 @@ const AuthForm = ({ type }: { type: string }) => {
     });
 
     const [loginLoading, setLoginLoading] = useState<boolean>(false);
-    const from = location.state?.from?.pathname || "/dashboard";
+    const from = location.state?.from?.pathname || "/profile";
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -90,7 +92,21 @@ const AuthForm = ({ type }: { type: string }) => {
             setIsOpen(false);
         }
     }
-    
+
+    const handleGoogleSignIn = async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const token = await result.user.getIdToken();
+            const { data }: { data: UserResponse } = await axios.post(`${import.meta.env.VITE_BASE_URL}/user/google/login`, { token: token }, { withCredentials: true });
+            userContext?.setUser(data.user);
+            toast.success("Logged In!");
+            navigate(from, { replace: true });
+        } catch (error: any) {
+            toast.error(error.response.data.message);
+        }
+    };
+
     return (
         <div className="w-full max-w-md px-12 p-4 m-auto mx-auto mt-8 mb-12 bg-white rounded-lg shadow-md dark:bg-gray-800">
             <div className="flex flex-col items-center justify-center space-y-2 mt-4 mx-auto">
@@ -138,7 +154,7 @@ const AuthForm = ({ type }: { type: string }) => {
             )}
 
             <div className='mt-8'>
-                <Link to="#" className="flex items-center justify-center px-6 py-3 mt-4 text-gray-600 transition-colors duration-300 transform border rounded-lg dark:border-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+                <button onClick={handleGoogleSignIn} className="w-full flex items-center justify-center px-6 py-3 mt-4 text-gray-600 transition-colors duration-300 transform border rounded-lg dark:border-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <svg className="w-6 h-6 mx-2" viewBox="0 0 40 40">
                         <path d="M36.3425 16.7358H35V16.6667H20V23.3333H29.4192C28.045 27.2142 24.3525 30 20 30C14.4775 30 10 25.5225 10 20C10 14.4775 14.4775 9.99999 20 9.99999C22.5492 9.99999 24.8683 10.9617 26.6342 12.5325L31.3483 7.81833C28.3717 5.04416 24.39 3.33333 20 3.33333C10.7958 3.33333 3.33335 10.7958 3.33335 20C3.33335 29.2042 10.7958 36.6667 20 36.6667C29.2042 36.6667 36.6667 29.2042 36.6667 20C36.6667 18.8825 36.5517 17.7917 36.3425 16.7358Z" fill="#FFC107" />
                         <path d="M5.25497 12.2425L10.7308 16.2583C12.2125 12.59 15.8008 9.99999 20 9.99999C22.5491 9.99999 24.8683 10.9617 26.6341 12.5325L31.3483 7.81833C28.3716 5.04416 24.39 3.33333 20 3.33333C13.5983 3.33333 8.04663 6.94749 5.25497 12.2425Z" fill="#FF3D00" />
@@ -146,7 +162,7 @@ const AuthForm = ({ type }: { type: string }) => {
                         <path d="M36.3425 16.7358H35V16.6667H20V23.3333H29.4192C28.7592 25.1975 27.56 26.805 26.0133 27.9758C26.0142 27.975 26.015 27.975 26.0158 27.9742L31.1742 32.3392C30.8092 32.6708 36.6667 28.3333 36.6667 20C36.6667 18.8825 36.5517 17.7917 36.3425 16.7358Z" fill="#1976D2" />
                     </svg>
                     <span className="mx-2">{type === "sign-in" ? "Sign in" : "Sign up"} with Google</span>
-                </Link>
+                </button>
 
                 <Link to="#" className="flex items-center justify-center px-6 py-3 mt-4 text-gray-600 transition-colors duration-300 transform border rounded-lg dark:border-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
                     <svg className="w-6 h-6 mx-2" width="20" height="20" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">

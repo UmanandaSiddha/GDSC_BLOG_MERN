@@ -8,6 +8,7 @@ import { addEmailToQueue } from "../utils/emailQueue.js";
 import { NextFunction, Request, Response } from "express";
 import { CustomRequest } from "../middlewares/auth.js";
 import path from "path";
+import { firebaseAdmin } from "../config/firebase-admin.js";
 
 // User Registration
 export const registerUser = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
@@ -112,7 +113,7 @@ export const verifyUser = catchAsyncErrors(async (req: CustomRequest, res: Respo
     user.oneTimePassword = undefined;
     user.oneTimeExpire = undefined;
 
-    
+
     const savedUser = await user.save();
 
     const message = savedUser
@@ -257,7 +258,7 @@ export const requestForgot = catchAsyncErrors(async (req: Request, res: Response
 
 // Forgot Password And Update
 export const forgotPassword = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    const {token} = req.params;
+    const { token } = req.params;
 
     if (token) {
         return next(new ErrorHandler("Broken Link", 500));
@@ -305,7 +306,7 @@ export const createCreatorRequest = catchAsyncErrors(async (req: CustomRequest, 
     }
 
     const newUser = await User.findByIdAndUpdate(
-        req.user?._id, 
+        req.user?._id,
         { request: requestEnum.PENDING },
         { new: true, runValidators: true, useFindAndModify: false }
     );
@@ -338,8 +339,8 @@ export const updateProfile = catchAsyncErrors(async (req: CustomRequest, res: Re
     };
 
     const updatedUser = await User.findByIdAndUpdate(
-        req.user?._id, 
-        updatedProfile, 
+        req.user?._id,
+        updatedProfile,
         { new: true, runValidators: true, useFindAndModify: false }
     );
 
@@ -372,8 +373,8 @@ export const uploadProfilePicture = catchAsyncErrors(async (req: CustomRequest, 
     }
 
     const newUser = await User.findByIdAndUpdate(
-        req.user?._id, 
-        { avatar: filename }, 
+        req.user?._id,
+        { avatar: filename },
         { new: true, runValidators: true, useFindAndModify: false }
     );
 
@@ -437,4 +438,42 @@ export const logoutUser = catchAsyncErrors(async (req: Request, res: Response, n
         success: true,
         message: "Logged Out",
     });
+});
+
+export const googleLogin = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const { token } = req.body;
+    if (!token) {
+        return next(new ErrorHandler("Token not found", 404));
+    }
+
+    const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+    if (!decodedToken) {
+        return next(new ErrorHandler("Google Auth Failed", 404));
+    }
+    const { uid, email, name, picture, email_verified } = decodedToken;
+    const user = await User.findOne({ email });
+
+    if (user) {
+        if (user?.googleId === uid) {
+            sendToken(user, 201, res);
+        } else {
+            user.googleId = uid;
+            user.account.push(accountEnum.GOOGLE);
+            if (user?.avatar?.length === 0) {
+                user.avatar =picture;
+            }
+            await user.save();
+            sendToken(user, 201, res);
+        }
+    } else {
+        const newUser = await User.create({
+            name,
+            email,
+            avatar: picture,
+            account: [accountEnum.GOOGLE],
+            isVerified: email_verified,
+            googleId: uid
+        });
+        sendToken(newUser, 201, res);
+    }
 });

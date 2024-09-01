@@ -7,6 +7,7 @@ import {
     deleteBlog, 
     deleteComment, 
     deleteUser, 
+    getAdminStats, 
     getAllUsers, 
     getUserById, 
     rejectAllRequests, 
@@ -17,6 +18,7 @@ import {
 const router = express.Router();
 
 router.route("/all").get(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.ADMIN), getAllUsers);
+router.route("/stats/all").get(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.ADMIN), getAdminStats);
 router.route("/byId/:id")
     .get(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.ADMIN), getUserById)
     .put(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.ADMIN), updateUserRole)

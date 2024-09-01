@@ -188,7 +188,7 @@ const Navbar = () => {
                                     <IoIosLogOut onClick={handleLogOut} className="object-cover mx-2 rounded-full h-6 w-6" />
                                 </div>
                             ) : (
-                                <Link to="/login" className="flex items-center px-4 py-2 rounded-md bg-gray-800 text-gray-200">
+                                <Link to="/sign-in" className="flex items-center px-4 py-2 rounded-md bg-gray-800 text-gray-200">
                                     Login
                                 </Link>
                             )}

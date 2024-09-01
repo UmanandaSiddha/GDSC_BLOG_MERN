@@ -38,6 +38,7 @@ interface User {
 interface UserResponse {
     success: boolean;
     user: User;
+    token: string;
 }
 
 interface AllUsersResponse {

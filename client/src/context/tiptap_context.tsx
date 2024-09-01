@@ -17,7 +17,7 @@ import TableCell from '@tiptap/extension-table-cell';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
 import Link from '@tiptap/extension-link';
-import FileHandler from '@tiptap-pro/extension-file-handler';
+// import FileHandler from '@tiptap-pro/extension-file-handler';
 
 type TiptapContextProviderProps = {
     children: React.ReactNode;
@@ -71,44 +71,44 @@ function TiptapProvider({ children }: TiptapContextProviderProps) {
             TextAlign.configure({
                 types: ['heading', 'paragraph', 'image'],
             }),
-            FileHandler.configure({
-                allowedMimeTypes: ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp'],
-                onDrop: (currentEditor, files, pos) => {
-                    files.forEach(file => {
-                        const fileReader = new FileReader()
+            // FileHandler.configure({
+            //     allowedMimeTypes: ['image/png', 'image/jpg', 'image/jpeg', 'image/gif', 'image/webp'],
+            //     onDrop: (currentEditor, files, pos) => {
+            //         files.forEach(file => {
+            //             const fileReader = new FileReader()
 
-                        fileReader.readAsDataURL(file)
-                        fileReader.onload = () => {
-                            currentEditor.chain().insertContentAt(pos, {
-                                type: 'image',
-                                attrs: {
-                                    src: fileReader.result,
-                                },
-                            }).focus().run()
-                        }
-                    })
-                },
-                onPaste: (currentEditor, files, htmlContent) => {
-                    files.forEach(file => {
-                        if (htmlContent) {
-                            console.log(htmlContent)
-                            return false
-                        }
+            //             fileReader.readAsDataURL(file)
+            //             fileReader.onload = () => {
+            //                 currentEditor.chain().insertContentAt(pos, {
+            //                     type: 'image',
+            //                     attrs: {
+            //                         src: fileReader.result,
+            //                     },
+            //                 }).focus().run()
+            //             }
+            //         })
+            //     },
+            //     onPaste: (currentEditor, files, htmlContent) => {
+            //         files.forEach(file => {
+            //             if (htmlContent) {
+            //                 console.log(htmlContent)
+            //                 return false
+            //             }
 
-                        const fileReader = new FileReader()
+            //             const fileReader = new FileReader()
 
-                        fileReader.readAsDataURL(file)
-                        fileReader.onload = () => {
-                            currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
-                                type: 'image',
-                                attrs: {
-                                    src: fileReader.result,
-                                },
-                            }).focus().run()
-                        }
-                    })
-                },
-            }),
+            //             fileReader.readAsDataURL(file)
+            //             fileReader.onload = () => {
+            //                 currentEditor.chain().insertContentAt(currentEditor.state.selection.anchor, {
+            //                     type: 'image',
+            //                     attrs: {
+            //                         src: fileReader.result,
+            //                     },
+            //                 }).focus().run()
+            //             }
+            //         })
+            //     },
+            // }),
             Underline.configure({
                 HTMLAttributes: {
                     class: 'my-custom-class',
@@ -118,10 +118,6 @@ function TiptapProvider({ children }: TiptapContextProviderProps) {
                 lowlight,
             }),
             Highlight,
-            // Document,
-            // Paragraph,
-            // Text,
-            // Gapcursor,
             Table.configure({
                 resizable: true,
             }),

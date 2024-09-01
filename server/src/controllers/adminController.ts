@@ -202,3 +202,26 @@ export const deleteBlog =  catchAsyncErrors(async (req: CustomRequest, res: Resp
         message: "Blog Deleted",
     });
 });
+
+export const getAdminStats = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const blogs = await Blog.countDocuments();
+    const comments = await Comment.countDocuments();
+    const likes = await Like.countDocuments();
+    const users = await User.countDocuments({ role: roleEnum.USER });
+    const admins = await User.countDocuments({ role: roleEnum.ADMIN });
+    const creators = await User.countDocuments({ role: roleEnum.CREATOR });
+    const blockedUsers = await User.countDocuments({ isBlocked: true });
+
+    res.status(200).json({
+        success: true,
+        count: {
+            blogs,
+            comments,
+            likes,
+            users,
+            admins,
+            creators,
+            blockedUsers
+        }
+    });
+});

@@ -5,6 +5,7 @@ import {
     getAllAuthors,
     getAuthor,
     getUser,
+    googleLogin,
     loginUser, 
     logoutUser, 
     registerUser, 
@@ -23,6 +24,7 @@ const router = express.Router();
 
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
+router.route("/google/login").post(googleLogin);
 router.route("/author/all").get(getAllAuthors);
 router.route("/author/:id").get(getAuthor);
 router.route("/request/forgot").post(requestForgot);

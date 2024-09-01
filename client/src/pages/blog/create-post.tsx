@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import Tiptap from "@/components/custom/editor";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -6,13 +6,41 @@ import { IoMdCloseCircleOutline } from "react-icons/io";
 import { useSearchParams } from "react-router-dom";
 import { TiptapContext } from "@/context/tiptap_context";
 
+import ReactCrop, {
+    centerCrop,
+    makeAspectCrop,
+    Crop,
+    PixelCrop,
+} from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import { canvasPreview } from "@/components/custom/canvasPreview";
+
+function centerAspectCrop(
+    mediaWidth: number,
+    mediaHeight: number,
+    aspect: number,
+) {
+    return centerCrop(
+        makeAspectCrop(
+            {
+                unit: '%',
+                width: 90,
+            },
+            aspect,
+            mediaWidth,
+            mediaHeight,
+        ),
+        mediaWidth,
+        mediaHeight,
+    )
+}
+
 const CreatePost = () => {
 
     const [isEditable, setIsEditable] = useState(true);
     const { editor } = useContext(TiptapContext);
     const [searchParams, setSearchParams] = useSearchParams();
     const id = searchParams.get("id");
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploadLoading, setUploadLoading] = useState(false);
     const [postData, setPostData] = useState<Blog>();
     const [title, setTitle] = useState(postData?.title || "");
@@ -51,38 +79,7 @@ const CreatePost = () => {
     useEffect(() => {
         fetchBlog();
         fetchCategory();
-    }, [id])
-
-    const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files && event.target.files.length > 0) {
-            setSelectedFile(event.target.files[0]);
-        }
-    };
-
-    const onFileUpload = async () => {
-        if (!selectedFile) return;
-
-        setUploadLoading(true);
-        const formData = new FormData();
-        formData.append('blogs', selectedFile);
-        if (title) formData.append("title", title);
-        if (description) formData.append("description", description);
-        if (blogCategory) formData.append("category", blogCategory);
-        const content = editor.getHTML();
-        if (content) formData.append("content", content);
-
-        try {
-            const id = searchParams.get("id");
-            const link = id ? `${import.meta.env.VITE_BASE_URL}/blog/upload/cover?id=${id}` : `${import.meta.env.VITE_BASE_URL}/blog/upload/cover`
-            const { data } = await axios.post(link, formData, { headers: { 'Content-Type': 'multipart/form-data' }, withCredentials: true });
-            setSearchParams({ type: 'edit', id: data.data.blogId }, { replace: true });
-            toast.success('File uploaded successfully');
-        } catch (error: any) {
-            setUploadLoading(false);
-            toast.error(error.response.data.message);
-        }
-        setUploadLoading(false);
-    };
+    }, [id]);
 
     const onSubmit = async () => {
         if (!id) {
@@ -90,7 +87,6 @@ const CreatePost = () => {
             return;
         }
         const content = editor.getHTML();
-        console.log(content)
         const formData = {
             title,
             description,
@@ -116,6 +112,120 @@ const CreatePost = () => {
         }
     }
 
+    const [imgSrc, setImgSrc] = useState('')
+    const previewCanvasRef = useRef<HTMLCanvasElement>(null)
+    const imgRef = useRef<HTMLImageElement>(null)
+    const [crop, setCrop] = useState<Crop>()
+    const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
+
+    function onSelectFile(e: React.ChangeEvent<HTMLInputElement>) {
+        if (e.target.files && e.target.files.length > 0) {
+            setCrop(undefined)
+            const reader = new FileReader()
+            reader.addEventListener('load', () =>
+                setImgSrc(reader.result?.toString() || ''),
+            )
+            reader.readAsDataURL(e.target.files[0])
+        }
+    }
+
+    function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+        const { width, height } = e.currentTarget
+        setCrop(centerAspectCrop(width, height, 3 / 1))
+    }
+
+    useEffect(() => {
+        const someFunc = async () => {
+            if (
+                completedCrop?.width &&
+                completedCrop?.height &&
+                imgRef.current &&
+                previewCanvasRef.current
+            ) {
+                canvasPreview(
+                    imgRef.current,
+                    previewCanvasRef.current,
+                    completedCrop,
+                    1,
+                    0,
+                )
+            }
+        }
+        someFunc();
+    }, [completedCrop]);
+
+    const onUploadCropClick = async () => {
+        const image = imgRef.current;
+        const previewCanvas = previewCanvasRef.current;
+
+        if (!image || !previewCanvas || !completedCrop) {
+            toast.error('Please select a cropped image first');
+            return;
+        }
+
+        const scaleX = image.naturalWidth / image.width;
+        const scaleY = image.naturalHeight / image.height;
+
+        const offscreen = new OffscreenCanvas(
+            completedCrop.width * scaleX,
+            completedCrop.height * scaleY,
+        )
+
+        offscreen.width = completedCrop.width * scaleX;
+        offscreen.height = completedCrop.height * scaleY;
+
+        const ctx = offscreen.getContext('2d');
+        if (!ctx) {
+            toast.error("No 2d context");
+            return;
+        }
+
+        ctx.drawImage(
+            previewCanvas,
+            0,
+            0,
+            previewCanvas.width,
+            previewCanvas.height,
+            0,
+            0,
+            offscreen.width,
+            offscreen.height
+        );
+
+        const blob = await offscreen.convertToBlob({
+            type: 'image/png',
+        })
+
+        if (!blob) {
+            toast.error('Could not create blob');
+            return;
+        }
+
+        const file = new File([blob], 'cropped-image.jpg', { type: 'image/png' });
+
+        setUploadLoading(true);
+        const formData = new FormData();
+        formData.append('blogs', file);
+        if (title) formData.append("title", title);
+        if (description) formData.append("description", description);
+        if (blogCategory) formData.append("category", blogCategory);
+        const content = editor.getHTML();
+        if (content) formData.append("content", content);
+
+
+        try {
+            const id = searchParams.get("id");
+            const link = id ? `${import.meta.env.VITE_BASE_URL}/blog/upload/cover?id=${id}` : `${import.meta.env.VITE_BASE_URL}/blog/upload/cover`
+            const { data } = await axios.post(link, formData, { headers: { 'Content-Type': 'multipart/form-data' }, withCredentials: true });
+            setSearchParams({ type: 'edit', id: data.data.blogId }, { replace: true });
+            toast.success('File uploaded successfully');
+        } catch (error: any) {
+            setUploadLoading(false);
+            toast.error(error.response.data.message);
+        }
+        setUploadLoading(false);
+    }
+
     return (
         <main className='mt-32 px-8 md:px-20 lg:px-40 mb-8'>
 
@@ -125,12 +235,44 @@ const CreatePost = () => {
             </div>
 
             <h1 className="text-3xl mt-8 font-bold pb-4">Blog Cover Image</h1>
-            <img src={postData ? postData.image : "https://via.placeholder.com/800x400"} alt="Cover" className="w-auto h-64 object-cover rounded-lg" />
+            {!!imgSrc && (
+                <ReactCrop
+                    crop={crop}
+                    onChange={(_, percentCrop) => setCrop(percentCrop)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                    aspect={3 / 1}
+                    minHeight={100}
+                >
+                    <img
+                        ref={imgRef}
+                        alt="Crop me"
+                        src={imgSrc}
+                        style={{ height: "500px" }}
+                        onLoad={onImageLoad}
+                    />
+                </ReactCrop>
+            )}
+            {!!completedCrop && (
+                <div>
+                    <canvas
+                        ref={previewCanvasRef}
+                        style={{
+                            border: '1px solid black',
+                            objectFit: 'contain',
+                            width: completedCrop.width,
+                            height: completedCrop.height,
+                        }}
+                    />
+                </div>
+            )}
+            <img src={postData ? postData.image : "https://via.placeholder.com/900x300"} alt="Cover" className="mt-6 w-auto h-64 object-cover rounded-lg" />
             <div className="flex justify-center items-center w-full gap-4">
-                <input type="file" accept="image/*" onChange={onFileChange} className="block w-full px-3 py-4 mt-2 pl-4 lg:pl-12 text-lg text-gray-600 bg-white border border-gray-200 rounded-lg file:bg-gray-200 file:text-gray-700 file:text-sm file:px-4 file:py-1 file:border-none file:rounded-full dark:file:bg-gray-800 dark:file:text-gray-200 dark:text-gray-300 placeholder-gray-400/70 dark:placeholder-gray-500 focus:border-black focus:outline-none focus:ring focus:ring-black focus:ring-opacity-40 dark:border-gray-600 dark:bg-gray-900 dark:focus:border-black" />
-                <button disabled={uploadLoading} onClick={onFileUpload} className="px-6 py-4 mt-2 bg-green-500 text-white rounded-lg border-2 text-lg font-semibold">
-                    {uploadLoading ? "Hold on..." : "Upload"}
-                </button>
+                <input type="file" accept="image/*" onChange={onSelectFile} className="block w-full px-3 py-4 mt-2 pl-4 lg:pl-12 text-lg text-gray-600 bg-white border border-gray-200 rounded-lg file:bg-gray-200 file:text-gray-700 file:text-sm file:px-4 file:py-1 file:border-none file:rounded-full dark:file:bg-gray-800 dark:file:text-gray-200 dark:text-gray-300 placeholder-gray-400/70 dark:placeholder-gray-500 focus:border-black focus:outline-none focus:ring focus:ring-black focus:ring-opacity-40 dark:border-gray-600 dark:bg-gray-900 dark:focus:border-black" />
+                {!!completedCrop && (
+                    <button disabled={uploadLoading} onClick={onUploadCropClick} className="px-6 py-4 mt-2 bg-green-500 text-white rounded-lg border-2 text-lg font-semibold">
+                        {uploadLoading ? "Hold on..." : "Upload"}
+                    </button>
+                )}
             </div>
 
             <h1 className="text-3xl mt-8 font-bold pb-4">Blog Description</h1>
@@ -204,7 +346,7 @@ const CreatePost = () => {
             </section>
 
             <div className="flex justify-start items-center mt-8 gap-4">
-                
+
                 <div className="flex justify-center items-center gap-4">
                     <h1 className="text-xl font-bold pb-2">Private</h1>
                     <div className="relative w-14 h-8 cursor-pointer" onClick={() => setIsPrivate(isPrivate => !isPrivate)} >

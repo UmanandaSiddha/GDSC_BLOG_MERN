@@ -15,6 +15,8 @@ const Dashboard = () => {
                             <div className="mb-6 px-6 lg:px-10 py-8 rounded-xl">
                                 <h1 className="text-3xl font-semibold text-center">Admin Dashboard</h1>
                                 <p className="text-xl text-center font-normal my-8">Navigate to all routes</p>
+
+                                
                             </div>
                         </div>
                     </div>
