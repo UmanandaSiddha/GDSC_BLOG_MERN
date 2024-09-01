@@ -2,7 +2,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ErrorBoundary from "./components/custom/error-boundary";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { IoIosArrowUp } from "react-icons/io";
 
 import Navbar from "./components/custom/navbar";
 import Footer from "./components/custom/footer";
@@ -23,11 +24,39 @@ const CreatePost = lazy(() => import("./pages/blog/create-post"));
 const BlogPost = lazy(() => import("./pages/blog/blog"));
 const BlogPage = lazy(() => import("./pages/blog/all-post"));
 const Dashboard = lazy(() => import("./pages/root/dashboard"));
+const AllUser = lazy(() => import("./pages/admin/all-user"));
+const AllComment = lazy(() => import("./pages/admin/all-comment"));
+const Stats = lazy(() => import("./pages/admin/stats"));
 
 const App = () => {
 
     const location = useLocation();
     const userContext = useUser();
+
+    const [isVisible, setIsVisible] = useState(false);
+
+    const toggleVisibility = () => {
+        if (window.scrollY > 300) {
+            setIsVisible(true);
+        } else {
+            setIsVisible(false);
+        }
+    };
+
+    const scrollToTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+        });
+    };
+
+    useEffect(() => {
+        window.addEventListener('scroll', toggleVisibility);
+
+        return () => {
+            window.removeEventListener('scroll', toggleVisibility);
+        };
+    }, []);
 
     return userContext?.loading ? <Loader /> : (
         <div>
@@ -43,6 +72,14 @@ const App = () => {
                 pauseOnHover
                 theme="dark"
             />
+            {isVisible && (
+                <button
+                    onClick={scrollToTop}
+                    className="fixed bottom-8 right-8 bg-gray-900 text-white p-2 rounded-md"
+                >
+                    <IoIosArrowUp size={24} />
+                </button>
+            )}
             <ErrorBoundary>
                 {!["/sign-in", "/sign-up"].includes(location.pathname) && (<Navbar />)}
                 {/* <div className="w-full mt-32 text-white bg-emerald-500">
@@ -79,6 +116,9 @@ const App = () => {
                             element={<ProtectedRoute isAuthenticated={userContext?.user && userContext.user.role === "admin" ? true : false} redirect="/sign-in" />}
                         >
                             <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/dashboard/user" element={<AllUser />} />
+                            <Route path="/dashboard/comment" element={<AllComment />} />
+                            <Route path="/dashboard/stats" element={<Stats />} />
                         </Route>
 
                         <Route

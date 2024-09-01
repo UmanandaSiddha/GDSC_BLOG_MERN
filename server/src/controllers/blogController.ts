@@ -8,6 +8,8 @@ import ApiFeatures from "../utils/apiFeatures.js";
 import Category from "../models/category.js";
 import path from "path";
 import fs from "fs";
+import Comment from "../models/commentModel.js";
+import Like from "../models/likeModel.js";
 
 export const createBlog = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
     const user = await User.findById(req.user?._id);
@@ -15,7 +17,7 @@ export const createBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
         return next(new ErrorHandler("User not found", 404));
     }
 
-    const { title, description, content, isPrivate } = req.body;
+    const { title, description, content, isPrivate, category, disableComments } = req.body;
     if (!title || !description || !content) {
         return next(new ErrorHandler("All fields are required", 400));
     }
@@ -25,6 +27,8 @@ export const createBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
         description,
         content,
         isPrivate: Boolean(isPrivate),
+        disableComments: Boolean(disableComments),
+        category: category,
         author: user._id,
     });
 
@@ -62,7 +66,7 @@ export const uploadCoverImage = catchAsyncErrors(async (req: CustomRequest, res:
                 console.error('Error deleting image:', error);
             }
             await Blog.findByIdAndUpdate(
-                req.query.id, 
+                req.query.id,
                 { image: filename },
                 { new: true, runValidators: true, useFindAndModify: false }
             );
@@ -99,7 +103,7 @@ export const uploadBlogImage = catchAsyncErrors(async (req: CustomRequest, res: 
     let blog;
     if (req.query.id) {
         await Blog.findByIdAndUpdate(
-            req.query.id, 
+            req.query.id,
             { $push: { blogImages: filename } },
             { new: true, runValidators: true, useFindAndModify: false }
         );
@@ -125,19 +129,20 @@ export const uploadBlogImage = catchAsyncErrors(async (req: CustomRequest, res: 
 });
 
 export const deleteBlogImage = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
-    
+
     const user = await User.findById(req.user?._id);
     if (!user) {
         return next(new ErrorHandler("User not found", 404));
     }
-    
-    const blog = await Blog.findOne({ _id: req.params.id, author: user._id});
+
+    const blog = await Blog.findOne({ _id: req.params.id, author: user._id });
     if (!blog) {
         return next(new ErrorHandler("Blog not found", 404));
     }
 
     const { filename } = req.body;
-    const imagePath = path.join('./public/blogs', filename);
+    const basename = filename.split('/').pop() || "";
+    const imagePath = path.join('./public/blogs', basename);
     try {
         if (fs.existsSync(imagePath)) {
             await fs.promises.unlink(imagePath);
@@ -158,38 +163,78 @@ export const deleteBlogImage = catchAsyncErrors(async (req: CustomRequest, res: 
     });
 });
 
+export const getAuthorBlogs = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+    }
+
+    const resultPerPage = 5;
+    const count = await Blog.countDocuments({ author: user._id });
+
+    const apiFeatures = new ApiFeatures(
+        Blog.find({ author: user._id }).populate("author", "name avatar").sort({ $natural: -1 }),
+        req.query
+    )
+
+    let filteredBlogs = await apiFeatures.query;
+    let filteredBlogsCount = filteredBlogs.length;
+    
+    apiFeatures.pagination(resultPerPage);
+    filteredBlogs = await apiFeatures.query.clone();
+
+    res.status(200).json({
+        success: true,
+        count,
+        resultPerPage,
+        blogs: filteredBlogs,
+        filteredBlogsCount
+    });
+});
+
 export const getUserBlogs = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
     const user = await User.findById(req.user?._id);
     if (!user) {
         return next(new ErrorHandler("User not found", 404));
     }
 
-    const blogs = await Blog.find({ author: user._id }).populate("author", "name avatar").sort({ $natural: -1 });
+    const resultPerPage = 5;
     const count = await Blog.countDocuments({ author: user._id });
+
+    const apiFeatures = new ApiFeatures(
+        Blog.find({ author: user._id }).populate("author", "name avatar").sort({ $natural: -1 }),
+        req.query
+    )
+
+    let filteredBlogs = await apiFeatures.query;
+    let filteredBlogsCount = filteredBlogs.length;
+    
+    apiFeatures.pagination(resultPerPage);
+    filteredBlogs = await apiFeatures.query.clone();
 
     res.status(200).json({
         success: true,
-        blogs,
-        count
+        count,
+        resultPerPage,
+        blogs: filteredBlogs,
+        filteredBlogsCount
     });
 });
 
 export const getAllBlogs = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    const resultPerPage = 10;
+    let resultPerPage = 5;
     const count = await Blog.countDocuments();
+
+    if (req.query.limit) {
+        resultPerPage = parseInt(String(req.query.limit));
+    }
 
     const apiFeatures = new ApiFeatures(
         Blog.find().populate("author", "name avatar").sort({ $natural: -1 }),
         req.query
     )
-    .searchBlog()
-    .filter();
-
-    // let link = `/api/v1/products?keyword=${keyword}&page=${currentPage}&price[gte]=${price[0]}&price[lte]=${price[1]}&ratings[gte]=${ratings}`;
-
-    // if (category) {
-    //     link = `/api/v1/products?keyword=${keyword}&page=${currentPage}&price[gte]=${price[0]}&price[lte]=${price[1]}&category=${category}&ratings[gte]=${ratings}`;
-    // }
+        .searchBlog()
+        .filter();
 
     let filteredBlogs = await apiFeatures.query;
     let filteredBlogsCount = filteredBlogs.length;
@@ -232,7 +277,7 @@ export const updateBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
     const { title, description, content, isPrivate, disableComments, category } = req.body;
 
     if (category) {
-        const categoryExists = await Category.findOne({ name: { $regex: category, $options: "i"} });
+        const categoryExists = await Category.findOne({ name: { $regex: category, $options: "i" } });
         if (!categoryExists) {
             await Category.create({
                 name: category,
@@ -257,7 +302,7 @@ export const updateBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
     }
 
     const newBlog = await Blog.findByIdAndUpdate(
-        req.params.id, 
+        req.params.id,
         updateData,
         { new: true, runValidators: true, useFindAndModify: false }
     );
@@ -280,6 +325,8 @@ export const deleteBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
         return next(new ErrorHandler("Blog not found", 404));
     }
 
+    await Comment.deleteMany({ post: blog._id });
+    await Like.deleteMany({ post: blog._id });
     await Blog.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
@@ -288,7 +335,7 @@ export const deleteBlog = catchAsyncErrors(async (req: CustomRequest, res: Respo
     });
 });
 
-export const getCategory = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+export const getCategory = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
     const category = await Category.find();
     const count = category.length;
 
@@ -296,5 +343,24 @@ export const getCategory = catchAsyncErrors(async (req: Request, res: Response, 
         success: true,
         category,
         count
+    });
+});
+
+export const updateBlogView = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+        return next(new ErrorHandler("Blog not found", 404));
+    }
+
+    const newBlog = await Blog.findByIdAndUpdate(
+        req.params.id,
+        { $inc: { views: 1 } },
+        { new: true, runValidators: true, useFindAndModify: false }
+    );
+
+    res.status(200).json({
+        success: true,
+        blog: newBlog,
+        message: "Blog view updated successfully"
     });
 });

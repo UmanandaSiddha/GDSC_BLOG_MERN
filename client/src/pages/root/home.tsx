@@ -1,34 +1,52 @@
 import HomeBlog from '@/components/custom/home-blog';
-import { MdArrowOutward } from 'react-icons/md';
-import { Link } from 'react-router-dom';
+import { LuMouse } from "react-icons/lu";
+// import { MdArrowOutward } from 'react-icons/md';
+// import { Link } from 'react-router-dom';
 
 const Home = () => {
+
+    const handleScroll = () => {
+        window.scrollBy({
+            top: window.innerHeight - 100,
+            behavior: 'smooth'
+        });
+    };
+
     return (
         <div className='flex flex-col items-center justify-center bg-white dark:bg-gray-900'>
-            {/* <div className="relative isolate px-6 py-32 lg:px-24">
-                <div className='flex flex-col justify-center items-center gap-8'>
-                    <img className='w-auto h-20' src="/gdsc_color.png" alt='gdsc-logo' />
-                    <h1 className='text-7xl text-gray-500 font-normal text-center' style={{ transform: 'scaleY(0.9)' }}>Google Developer Student Clubs</h1>
-                </div>
-            </div> */}
 
-            <div className="relative isolate px-6 pt-14 lg:px-8">
-                <div className="mx-auto max-w-5xl py-32 sm:py-48 lg:py-56">
-                    <div className="text-center">
-                        <div className='flex justify-center items-center'>
-                            <img className='w-auto h-36' src="/gdsc_color.png" alt='gdsc-logo' />
-                            <h1 className="text-4xl font-bold text-gray-900 sm:text-6xl">Google Students Developer Club</h1>
-                        </div>
-                        <p className="mt-6 text-xl leading-8 text-gray-600">
+            <div className="mt-32 md:mt-48 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+                <header className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4 text-center md:text-left">
+                    <div className="w-full md:w-1/3 flex justify-center md:justify-end mb-8 md:mb-0">
+                        <img
+                            src="/gdsc_color.png"
+                            alt="GDSC Logo"
+                            className="w-[80%] h-auto max-w-xs sm:max-w-sm md:max-w-xs lg:max-w-sm drop-shadow-2xl"
+                        />
+                    </div>
+                    <div className="w-full md:w-2/3 flex flex-col items-center md:items-start">
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold font-roboto text-gray-900 mb-4 md:mb-6 leading-tight">
+                            Google <span className="text-blue-600">Students</span> Developers Club
+                        </h1>
+                        <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl mb-2 font-semibold text-gray-600">
                             Tezpur University
                         </p>
+                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-500">
+                            A dedicated blog website for GDSC Tezpur University
+                        </p>
                     </div>
-                </div>
+                </header>
+
+                <button onClick={handleScroll} className='mt-24 mb-12 flex flex-col items-center'>
+                    <LuMouse size={30} />
+                    <span>Scroll Down</span>
+                </button>
             </div>
+
 
             <HomeBlog />
 
-            <div className='w-full lg:w-[85%] mx-auto px-4 md:px-16'>
+            {/* <div className='w-full lg:w-[85%] mx-auto px-4 md:px-16'>
                 <div className='flex justify-between items-center m-4'>
                     <p className='text-3xl font-semibold'>Top Authors</p>
                     <Link to="/authors" className='hidden md:flex justify-center items-center gap-2 text-md'>
@@ -51,7 +69,7 @@ const Home = () => {
                         ))
                     }
                 </div>
-            </div>
+            </div> */}
         </div>
     )
 }

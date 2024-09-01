@@ -4,10 +4,12 @@ import {
     deleteBlog, 
     deleteBlogImage, 
     getAllBlogs, 
+    getAuthorBlogs, 
     getBlogById, 
     getCategory, 
     getUserBlogs, 
     updateBlog, 
+    updateBlogView, 
     uploadBlogImage, 
     uploadCoverImage 
 } from "../controllers/blogController.js";
@@ -18,10 +20,12 @@ import { isAuthenticatedUser, isUserVerified, authorizeRoles } from "../middlewa
 const router = express.Router();
 
 router.route("/all").get(getAllBlogs);
-router.route("/:id").get(getBlogById);
-router.route("/cat").put(getCategory);
-router.route("/user").put(isAuthenticatedUser, isUserVerified, getUserBlogs);
+router.route("/cate/all").get(getCategory);
+router.route("/byId/:id").get(getBlogById);
+router.route("/author/:id").get(getAuthorBlogs);
+router.route("/user/all").get(isAuthenticatedUser, isUserVerified, getUserBlogs);
 router.route("/create").post(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.CREATOR, roleEnum.ADMIN), createBlog);
+router.route("/update/view/:id").patch(updateBlogView);
 router.route("/edit/:id")
     .put(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.CREATOR, roleEnum.ADMIN), updateBlog)
     .delete(isAuthenticatedUser, isUserVerified, authorizeRoles(roleEnum.CREATOR, roleEnum.ADMIN), deleteBlog);

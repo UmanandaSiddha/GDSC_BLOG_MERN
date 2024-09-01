@@ -5,18 +5,14 @@ import User, { requestEnum, roleEnum } from "../models/userModel.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import ApiFeatures from "../utils/apiFeatures.js";
 import Blog from "../models/blogModel.js";
+import Comment from "../models/commentModel.js";
+import Like from "../models/likeModel.js";
 
 export const getAllUsers = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const resultPerPage = 10;
     const count = await User.countDocuments();
 
     const apiFeatures = new ApiFeatures(User.find().sort({ $natural: -1 }), req.query).searchUser().filter();
-
-    // let link = `/api/v1/products?keyword=${keyword}&page=${currentPage}&price[gte]=${price[0]}&price[lte]=${price[1]}&ratings[gte]=${ratings}`;
-
-    // if (category) {
-    //     link = `/api/v1/products?keyword=${keyword}&page=${currentPage}&price[gte]=${price[0]}&price[lte]=${price[1]}&category=${category}&ratings[gte]=${ratings}`;
-    // }
 
     let filteredUsers = await apiFeatures.query;
     let filteredUsersCount = filteredUsers.length;
@@ -165,11 +161,44 @@ export const deleteUser = catchAsyncErrors(async (req: CustomRequest, res: Respo
     }
 
     await Blog.deleteMany({ author: user._id });
+    await Comment.deleteMany({ user: user._id });
+    await Like.deleteMany({ user: user._id });
     
     await User.findByIdAndDelete(user._id);
 
     res.status(200).json({
         success: true,
         message: "User Deleted",
+    });
+});
+
+export const deleteComment = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) {
+        return next(new ErrorHandler("Comment not found", 404));
+    }
+
+    await Comment.findByIdAndDelete(comment._id);
+
+    res.status(200).json({
+        success: true,
+        message: "Comment Deleted",
+    });
+});
+
+export const deleteBlog =  catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+        return next(new ErrorHandler("Blog not found", 404));
+    }
+
+    await Comment.deleteMany({ post: blog._id });
+    await Like.deleteMany({ post: blog._id });
+    
+    await Blog.findByIdAndDelete(blog._id);
+
+    res.status(200).json({
+        success: true,
+        message: "Blog Deleted",
     });
 });

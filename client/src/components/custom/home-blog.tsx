@@ -6,21 +6,26 @@ import { toast } from 'react-toastify';
 
 const HomeBlog = () => {
 
-    const [activeTab, setActiveTab] = useState('All');
     const [blogs, setBlogs] = useState<Blog[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [blogCategory, setBlogCategory] = useState("all");
 
-    const tabs = [
-        { name: 'All', count: 20 },
-        { name: 'Technology', count: 3 },
-        { name: 'Lifestyle', count: 2 },
-        { name: 'Travel', count: 5 },
-        { name: 'Health', count: 9 },
-        { name: 'Culture', count: 1 },
-    ];
+    const fetchCategory = async () => {
+        try {
+            const { data }: { data: AllCategoriesResponse } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/cate/all`);
+            setCategories(data.category);
+        } catch (error: any) {
+            toast.error(error.response.data.message);
+        }
+    }
 
     const fetchBlogs = async () => {
         try {
-            const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/all?page=1`, { withCredentials: true });
+            let link = `${import.meta.env.VITE_BASE_URL}/blog/all?page=1`;
+            if (blogCategory && blogCategory != "all") {
+                link += `&category=${blogCategory}`;
+            }
+            const { data } = await axios.get(link, { withCredentials: true });
             setBlogs(data.blogs);
         } catch (error: any) {
             toast.error(error.response.data.message);
@@ -28,8 +33,12 @@ const HomeBlog = () => {
     }
 
     useEffect(() => {
-        fetchBlogs();
+        fetchCategory();
     }, []);
+
+    useEffect(() => {
+        fetchBlogs();
+    }, [blogCategory]);
 
     return (
         <>
@@ -38,11 +47,20 @@ const HomeBlog = () => {
                 <p className="mt-4 text-lg text-gray-500 dark:text-gray-300">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
             </div>
             <div className="flex flex-wrap items-center justify-center space-x-2 px-2 py-1 max-w-[85%] mx-auto gap-2">
-                {tabs.map((tab) => (
+                <button
+                    onClick={() => setBlogCategory("all")}
+                    className={`px-4 py-2 text-lg rounded-full border transition-all duration-300 ${blogCategory === "all"
+                        ? 'bg-black border-black text-white'
+                        : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-black hover:text-gray-200'
+                        }`}
+                >
+                    All
+                </button>
+                {categories.map((tab) => (
                     <button
                         key={tab.name}
-                        onClick={() => setActiveTab(tab.name)}
-                        className={`px-4 py-2 text-lg rounded-full border transition-all duration-300 ${activeTab === tab.name
+                        onClick={() => setBlogCategory(tab.name)}
+                        className={`px-4 py-2 text-lg rounded-full border transition-all duration-300 ${blogCategory === tab.name
                             ? 'bg-black border-black text-white'
                             : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-black hover:text-gray-200'
                             }`}

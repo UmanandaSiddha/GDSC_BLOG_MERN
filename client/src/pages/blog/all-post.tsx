@@ -1,41 +1,68 @@
 import BlogGroup from '@/components/custom/blog-group';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 const BlogPage = () => {
 
     const [blogs, setBlogs] = useState<Blog[]>([]);
     const [keyword, setKeyword] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
     const [blogCategory, setBlogCategory] = useState("all");
     const [categories, setCategories] = useState<Category[]>([]);
+    const [isFetching, setIsFetching] = useState(false);
 
     const fetchBlogs = async () => {
         try {
-            let link = `${import.meta.env.VITE_BASE_URL}/blog/all?keyword=${keyword}&page=1`;
+            setIsFetching(true);
+            let link = `${import.meta.env.VITE_BASE_URL}/blog/all?keyword=${keyword}&page=${currentPage}`;
             if (blogCategory && blogCategory != "all") {
                 link += `&category=${blogCategory}`;
             }
-            const { data } = await axios.get(link, { withCredentials: true });
-            setBlogs(data.blogs);
+            const { data }: {data: AllBlogResponse } = await axios.get(link, { withCredentials: true });
+            if (currentPage === 1) {
+                setBlogs(data.blogs);
+            } else {
+                setBlogs(prevBlogs => [...prevBlogs, ...data.blogs]);
+            }
+            setIsFetching(false);
         } catch (error: any) {
+            setIsFetching(false);
             toast.error(error.response.data.message);
         }
     }
 
     const fetchCategory = async () => {
         try {
-            const { data }: { data: AllCategoriesResponse } = await axios.put(`${import.meta.env.VITE_BASE_URL}/blog/cat`);
+            const { data }: { data: AllCategoriesResponse } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/cate/all`);
             setCategories(data.category);
         } catch (error: any) {
             toast.error(error.response.data.message);
         }
     }
 
+    const debounceSearch = useCallback((callback: () => void, delay: number) => {
+        const handler = setTimeout(() => {
+            callback();
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, []);
+
     useEffect(() => {
-        fetchBlogs();
+        debounceSearch(fetchBlogs, 500);
+    }, [keyword, blogCategory, currentPage]);
+
+    useEffect(() => {
         fetchCategory();
-    }, [keyword, blogCategory])
+    }, []);
+
+    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setKeyword(e.target.value);
+        setCurrentPage(1);
+    };
 
     return (
         <div className='flex flex-col mt-8 items-center justify-center'>
@@ -50,12 +77,15 @@ const BlogPage = () => {
                     </svg>
                 </span>
 
-                <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)} className="w-full text-md px-2 py-4 pl-16 pr-4 text-gray-700 bg-white border-2 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-black dark:focus:border-gray-500 focus:ring focus:ring-gray-300 focus:ring-opacity-50 focus:outline-none" placeholder="Search posts ..." />
+                <input type="text" value={keyword} onChange={(e) => handleSearchInputChange(e)} className="w-full text-md px-2 py-4 pl-16 pr-4 text-gray-700 bg-white border-2 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 focus:border-black dark:focus:border-gray-500 focus:ring focus:ring-gray-300 focus:ring-opacity-50 focus:outline-none" placeholder="Search posts ..." />
             </div>
 
             <div className="flex flex-wrap items-center justify-center space-x-2 px-2 py-1 mb-16 max-w-[85%] mx-auto gap-2">
                 <button
-                    onClick={() => setBlogCategory("all")}
+                    onClick={() => {
+                        setBlogCategory("all");
+                        setCurrentPage(1);
+                    }}
                     className={`px-4 py-2 text-lg rounded-full border transition-all duration-300 ${blogCategory === "all"
                         ? 'bg-black border-black text-white'
                         : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-black hover:text-gray-200'
@@ -66,7 +96,10 @@ const BlogPage = () => {
                 {categories.map((tab) => (
                     <button
                         key={tab.name}
-                        onClick={() => setBlogCategory(tab.name)}
+                        onClick={() => {
+                            setBlogCategory(tab.name);
+                            setCurrentPage(1);
+                        }}
                         className={`px-4 py-2 text-lg rounded-full border transition-all duration-300 ${blogCategory === tab.name
                             ? 'bg-black border-black text-white'
                             : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-black hover:text-gray-200'
@@ -78,14 +111,17 @@ const BlogPage = () => {
             </div>
 
             <BlogGroup data={blogs} />
-            <button className="relative inline-block text-lg group mb-12">
-                <span className="relative z-10 block px-5 py-3 overflow-hidden font-medium leading-tight text-gray-800 transition-colors duration-300 ease-out border-2 border-gray-900 rounded-lg group-hover:text-white">
-                    <span className="absolute inset-0 w-full h-full px-5 py-3 rounded-lg bg-gray-50"></span>
-                    <span className="absolute left-0 w-48 h-48 -ml-2 transition-all duration-300 origin-top-right -rotate-90 -translate-x-full translate-y-12 bg-gray-900 group-hover:-rotate-180 ease"></span>
-                    <span className="relative">Load More</span>
-                </span>
-                <span className="absolute bottom-0 right-0 w-full h-12 -mb-1 -mr-1 transition-all duration-200 ease-linear bg-gray-900 rounded-lg group-hover:mb-0 group-hover:mr-0" data-rounded="rounded-lg"></span>
-            </button>
+            {isFetching && <p>Loading...</p>}
+            {!isFetching && (
+                <button onClick={() => setCurrentPage(prev => prev + 1)} className="relative inline-block text-lg group mb-12">
+                    <span className="relative z-10 block px-5 py-3 overflow-hidden font-medium leading-tight text-gray-800 transition-colors duration-300 ease-out border-2 border-gray-900 rounded-lg group-hover:text-white">
+                        <span className="absolute inset-0 w-full h-full px-5 py-3 rounded-lg bg-gray-50"></span>
+                        <span className="absolute left-0 w-48 h-48 -ml-2 transition-all duration-300 origin-top-right -rotate-90 -translate-x-full translate-y-12 bg-gray-900 group-hover:-rotate-180 ease"></span>
+                        <span className="relative">Load More</span>
+                    </span>
+                    <span className="absolute bottom-0 right-0 w-full h-12 -mb-1 -mr-1 transition-all duration-200 ease-linear bg-gray-900 rounded-lg group-hover:mb-0 group-hover:mr-0" data-rounded="rounded-lg"></span>
+                </button>
+            )}
         </div>
     )
 }

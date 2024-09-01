@@ -78,7 +78,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
         },
         request: {
             type: String,
-            enum: Object.values(roleEnum),
+            enum: Object.values(requestEnum),
         },
         socials: {
             type: [

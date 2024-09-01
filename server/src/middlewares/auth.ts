@@ -21,6 +21,10 @@ export const isAuthenticatedUser = catchAsyncErrors(async (req: CustomRequest, r
     if (!user) {
         return next(new ErrorHandler("User not found", 404));
     }
+    
+    if (user.isBlocked) {
+        return next(new ErrorHandler("Your account has been blocked", 403));
+    }
 
     req.user = user;
     next();

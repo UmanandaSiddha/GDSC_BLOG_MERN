@@ -55,7 +55,6 @@ export const registerUser = catchAsyncErrors(async (req: Request, res: Response,
 // Request Verification Email
 export const requestVerification = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
     const user = await User.findById(req.user?._id);
-
     if (!user) {
         return next(new ErrorHandler("User not found", 404));
     }
@@ -145,6 +144,10 @@ export const loginUser = catchAsyncErrors(async (req: Request, res: Response, ne
 
     if (!user) {
         return next(new ErrorHandler("Invalid Credentials", 401));
+    }
+
+    if (user.isBlocked) {
+        return next(new ErrorHandler("Account is blocked", 403));
     }
 
     const isPasswordMatched = await user.comparePassword(password);
@@ -301,7 +304,7 @@ export const createCreatorRequest = catchAsyncErrors(async (req: CustomRequest, 
         return next(new ErrorHandler("User not found", 404));
     }
 
-    await User.findByIdAndUpdate(
+    const newUser = await User.findByIdAndUpdate(
         req.user?._id, 
         { request: requestEnum.PENDING },
         { new: true, runValidators: true, useFindAndModify: false }
@@ -309,22 +312,56 @@ export const createCreatorRequest = catchAsyncErrors(async (req: CustomRequest, 
 
     res.status(200).json({
         success: true,
+        user: newUser,
         message: "Creator Request Added"
     });
 });
 
-// Update Profile
+// Update Profile Info
 export const updateProfile = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
     const user = await User.findById(req.user?._id);
     if (!user) {
         return next(new ErrorHandler("User not found", 404));
     }
 
-    const { name } = req.body;
+    const { name, bio, socials } = req.body;
+
+    const formattedSocials = Object.entries(socials).map(([platform, url]) => ({
+        platform,
+        url,
+    }));
+
+    const updatedProfile = {
+        name: name || user.name,
+        bio: bio || user.bio,
+        socials: formattedSocials.length ? formattedSocials : user.socials,
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(
+        req.user?._id, 
+        updatedProfile, 
+        { new: true, runValidators: true, useFindAndModify: false }
+    );
+
+    res.status(200).json({
+        success: true,
+        user: updatedUser,
+        message: "Profile updated successfully"
+    });
+});
+
+// update profile picture
+export const uploadProfilePicture = catchAsyncErrors(async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const filename = req.file ? `${process.env.SERVER_URL}/avatars/${req.file.filename}` : "";
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+    }
 
     if (req.file && user.avatar && user.avatar.length > 0) {
-        const filename = path.basename(user.avatar);
-        const imagePath = path.join('./public/avatars', filename);
+        const basename = user.avatar.split('/').pop() || "";
+        const imagePath = path.join('./public/avatars', basename);
         try {
             if (fs.existsSync(imagePath)) {
                 await fs.promises.unlink(imagePath);
@@ -334,23 +371,20 @@ export const updateProfile = catchAsyncErrors(async (req: CustomRequest, res: Re
         }
     }
 
-    const updatedProfile = {
-        name: name || user.name,
-        avatarUrl: req.file ? `${process.env.SERVER_URL}/uploads/avatars/${req.file.filename}` : user.avatar
-    };
-
-    await User.findByIdAndUpdate(
+    const newUser = await User.findByIdAndUpdate(
         req.user?._id, 
-        updatedProfile, 
+        { avatar: filename }, 
         { new: true, runValidators: true, useFindAndModify: false }
     );
 
     res.status(200).json({
         success: true,
+        user: newUser,
         message: "Profile updated successfully"
     });
 });
 
+// Get All Authors
 export const getAllAuthors = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const users = await User.find({ role: roleEnum.CREATOR });
     const count = await User.countDocuments({ role: roleEnum.CREATOR });
@@ -362,6 +396,7 @@ export const getAllAuthors = catchAsyncErrors(async (req: Request, res: Response
     });
 });
 
+// Get Author By ID
 export const getAuthor = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
     const user = await User.findById(req.params.id);
     if (!user) {

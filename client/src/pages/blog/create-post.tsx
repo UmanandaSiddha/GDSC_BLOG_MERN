@@ -25,7 +25,7 @@ const CreatePost = () => {
     const fetchBlog = async () => {
         try {
             if (id) {
-                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/${id}`, { withCredentials: true });
+                const { data } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/byId/${id}`, { withCredentials: true });
                 setPostData(data.blog);
                 setTitle(data.blog.title);
                 setDescription(data.blog.description);
@@ -41,7 +41,7 @@ const CreatePost = () => {
 
     const fetchCategory = async () => {
         try {
-            const { data }: { data: AllCategoriesResponse } = await axios.put(`${import.meta.env.VITE_BASE_URL}/blog/cat`);
+            const { data }: { data: AllCategoriesResponse } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blog/cate/all`);
             setCategories(data.category);
         } catch (error: any) {
             toast.error(error.response.data.message);
@@ -90,6 +90,7 @@ const CreatePost = () => {
             return;
         }
         const content = editor.getHTML();
+        console.log(content)
         const formData = {
             title,
             description,
@@ -101,6 +102,15 @@ const CreatePost = () => {
         try {
             await axios.put(`${import.meta.env.VITE_BASE_URL}/blog/edit/${id}`, formData, { withCredentials: true });
             toast.success('Blog updated successfully');
+        } catch (error: any) {
+            toast.error(error.response.data.message);
+        }
+    }
+
+    const handleDeleteBlogImage = async (filename: string) => {
+        try {
+            await axios.put(`${import.meta.env.VITE_BASE_URL}/blog/delete/${id}`, { filename }, { withCredentials: true });
+            toast.success('Blog image deleted successfully');
         } catch (error: any) {
             toast.error(error.response.data.message);
         }
@@ -159,7 +169,7 @@ const CreatePost = () => {
                             />
                             <button
                                 className="absolute top-0 right-0 px-1 py-1 bg-gray-400 text-white rounded-full hover:bg-gray-500"
-                                onClick={() => console.log(`Remove image ${item}`)}
+                                onClick={() => handleDeleteBlogImage(item)}
                             >
                                 <IoMdCloseCircleOutline className="h-6 w-6" />
                             </button>
@@ -171,16 +181,16 @@ const CreatePost = () => {
             <h1 className="text-3xl mt-8 font-bold pb-4">Blog Content</h1>
             <div className="inline-flex items-center">
                 <label className="relative flex items-center p-3 rounded-full cursor-pointer" htmlFor="check">
-                    <input type="checkbox" checked={isEditable} onClick={() => setIsEditable(isEditable => !isEditable)}
+                    <input type="checkbox" checked={isEditable} onChange={() => setIsEditable(isEditable => !isEditable)}
                         className="before:content[''] peer relative h-5 w-5 cursor-pointer appearance-none rounded-md border-2 border-gray-200 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-gray-900 checked:bg-gray-900 checked:before:bg-gray-900 hover:before:opacity-10"
                         id="check" />
                     <span
                         className="absolute text-white transition-opacity opacity-0 pointer-events-none top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 peer-checked:opacity-100">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"
-                            stroke="currentColor" stroke-width="1">
-                            <path fill-rule="evenodd"
+                            stroke="currentColor" strokeWidth="1">
+                            <path fillRule="evenodd"
                                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clip-rule="evenodd"></path>
+                                clipRule="evenodd"></path>
                         </svg>
                     </span>
                 </label>
