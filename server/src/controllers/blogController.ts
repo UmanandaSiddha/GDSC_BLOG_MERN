@@ -222,7 +222,7 @@ export const getUserBlogs = catchAsyncErrors(async (req: CustomRequest, res: Res
 });
 
 export const getAllBlogs = catchAsyncErrors(async (req: Request, res: Response, next: NextFunction) => {
-    let resultPerPage = 5;
+    let resultPerPage = 9;
     const count = await Blog.countDocuments();
 
     if (req.query.limit) {

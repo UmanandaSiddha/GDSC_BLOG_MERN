@@ -25,10 +25,10 @@ const BlogGroup = ({ data }: { data: Blog[] }) => {
     const [openDelete, setOpenDelete] = useState(false);
     const [currentBlog, setCurrentBlog] = useState<string>();
 
-    const handleDeletePost = async () => {
+    const handleDeletePost = async (id: string) => {
         if (currentBlog) {
             try {
-                await axios.delete(`${import.meta.env.VITE_BASE_URL}/blog/edit/${currentBlog}`, { withCredentials: true });
+                await axios.delete(`${import.meta.env.VITE_BASE_URL}/blog/edit/${id}`, { withCredentials: true });
                 toast.success("Blog Deleted successfully");
                 setOpenDelete(false);
             } catch (error: any) {
@@ -43,18 +43,22 @@ const BlogGroup = ({ data }: { data: Blog[] }) => {
         <section className="bg-white dark:bg-gray-900 w-full mb-8">
             <div className="container w-[95%] lg:w-[85%] px-2 md:px-6 lg:px-16 py-10 mx-auto">
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-                    {data.map((item, index) => (
+                    {data?.map((item, index) => (
                         <Link to={`/blogs/blog?id=${item._id}`} className='group' key={index}>
                             <div className="relative">
-                                <img width={500} height={500} className="object-cover object-center w-full rounded-lg h-72 transition-transform duration-300 transform group-hover:scale-105" src={item.image} alt={item.author.name} />
-                                {(userContext?.user?.role === "admin" || (userContext?.user?.role === "creator" && item.author._id === userContext?.user?._id)) && (
+                                <img width={500} height={500} className="object-cover object-center w-full rounded-lg h-72 transition-transform duration-300 transform group-hover:scale-105" src={item?.image} alt={item?.author?.name} />
+                                {(userContext?.user?.role === "admin" || (userContext?.user?.role === "creator" && item?.author?._id === userContext?.user?._id)) && (
                                     <div className="absolute top-0 right-0 m-2 p-1.5 group-hover:bg-slate-300 rounded-full">
                                         {openDelete && (
                                             <div className="fixed inset-0 bg-opacity-30 backdrop-blur flex justify-center items-center z-10">
                                                 <div className="bg-white p-8 rounded-xl shadow-lg w-[425px]">
                                                     <h2 className="text-2xl font-bold mb-4 flex justify-center">Are you sure you want to delete this user?</h2>
                                                     <div className="w-full flex justify-between items-center gap-4">
-                                                        <button className="w-1/2 px-3 py-2 border-2 rounded-lg bg-red-500 text-white" onClick={() => handleDeletePost()}>Delete</button>
+                                                        <button className="w-1/2 px-3 py-2 border-2 rounded-lg bg-red-500 text-white" onClick={() => {
+                                                            if (currentBlog) {
+                                                                handleDeletePost(currentBlog)
+                                                            }
+                                                        }}>Delete</button>
                                                         <button className="w-1/2 px-3 py-2 border-2 rounded-lg" onClick={() => setOpenDelete(false)}>Cancel</button>
                                                     </div>
                                                 </div>
@@ -78,7 +82,7 @@ const BlogGroup = ({ data }: { data: Blog[] }) => {
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={(e) => {
                                                     e.stopPropagation();
-                                                    e.preventDefault();
+                                                    // e.preventDefault();
                                                     setCurrentBlog(item._id);
                                                     setOpenDelete(true);
                                                 }}>Delete Blog</DropdownMenuItem>
@@ -99,10 +103,10 @@ const BlogGroup = ({ data }: { data: Blog[] }) => {
                                 <div className="flex justify-between items-center mt-4">
                                     <div className='flex items-center justify-evenly space-x-1.5'>
                                         <Avatar className='h-7 w-7'>
-                                            <AvatarImage src={item.author.avatar} alt={item.author.name} />
-                                            <AvatarFallback>{item.author.name.split(' ').map(word => word[0]).join('')}</AvatarFallback>
+                                            <AvatarImage src={item?.author?.avatar} alt={item?.author?.name} />
+                                            <AvatarFallback>{item?.author?.name.split(' ').map(word => word[0]).join('')}</AvatarFallback>
                                         </Avatar>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">{item.author.name}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">{item?.author?.name}</p>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">•</p>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
                                             {new Date(item.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}

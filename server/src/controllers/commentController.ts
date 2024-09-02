@@ -91,8 +91,8 @@ export const updateComment = catchAsyncErrors(async (req: CustomRequest, res: Re
         return next(new ErrorHandler("Comment not found", 404)); 
     }
 
-    if (comment.user !== req.user?.id) {
-        return next(new ErrorHandler("You are not authorized to delete this comment", 403));
+    if (String(comment.user) !== String(req.user?.id)) {
+        return next(new ErrorHandler("You are not authorized to edit this comment", 403));
     }
 
     const { newComment } = req.body;

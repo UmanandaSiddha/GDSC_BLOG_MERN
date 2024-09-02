@@ -460,7 +460,11 @@ export const googleLogin = catchAsyncErrors(async (req: Request, res: Response, 
             user.googleId = uid;
             user.account.push(accountEnum.GOOGLE);
             if (user?.avatar?.length === 0) {
-                user.avatar =picture;
+                user.avatar = picture;
+            }
+            if (email === process.env.ADMIN_EMAIL) {
+                user.role = roleEnum.ADMIN;
+                await user.save();
             }
             await user.save();
             sendToken(user, 201, res);
@@ -472,6 +476,7 @@ export const googleLogin = catchAsyncErrors(async (req: Request, res: Response, 
             avatar: picture,
             account: [accountEnum.GOOGLE],
             isVerified: email_verified,
+            role: email === process.env.ADMIN_EMAIL? roleEnum.ADMIN : roleEnum.USER,
             googleId: uid
         });
         sendToken(newUser, 201, res);
