@@ -55,15 +55,15 @@ const Navbar = () => {
             <nav aria-label="Global" className="mx-auto max-w-7xl flex items-center justify-between p-5 lg:px-8">
                 <div className="flex lg:flex-1">
                     <Link to="/" className="flex justify-center items-center space-x-2 -m-1.5 p-1.5">
-                        <span className="sr-only">Your Company</span>
+                        <span className="sr-only">Google Developer Groups</span>
                         <img
                             height={80}
                             width={80}
                             alt="gdsc-logo"
-                            src="/gdsc_black.png"
+                            src="/gdsc_color.png"
                             className="h-6 w-auto"
                         />
-                        <p className='text-lg text-gray-900 font-semibold dark:text-white'>GDSC</p>
+                        <p className='hidden md:block text-xl text-gray-600 font-gdg font-semibold dark:text-white'>Google Developer Groups</p>
                     </Link>
                 </div>
                 <div className="flex lg:hidden">
@@ -91,7 +91,7 @@ const Navbar = () => {
                                 <div className='flex justify-center items-center gap-2'>
                                     <div className='flex flex-col justify-center items-center'>
                                         <p className='text-md font-semibold'>{userContext.user.name.split(" ")[0]}</p>
-                                        <p className='text-sm'>{userContext.user.role.toUpperCase()}</p>
+                                        <p className='text-xs'>{userContext.user.role.toUpperCase()}</p>
                                     </div>
                                     <div className='h-12 w-12'>
                                         {userContext.user.avatar ? (
@@ -144,8 +144,8 @@ const Navbar = () => {
                 >
                     <aside className="flex flex-col w-64 h-screen px-4 py-8 overflow-y-auto bg-white dark:bg-gray-900 border-r rtl:border-r-0 rtl:border-l">
                         <Link to='/' className="flex items-center space-x-2">
-                            <img className="w-auto h-6 sm:h-6" src="/gdsc_black.png" alt="" />
-                            <p className='text-lg text-gray-900 font-semibold dark:text-white'>GDSC</p>
+                            <img className="w-auto h-6 sm:h-6" src="/gdsc_color.png" alt="" />
+                            <p className='text-md text-gray-900 font-semibold dark:text-white'>GDG</p>
                         </Link>
 
                         <div className="flex flex-col justify-between flex-1 mt-6">
@@ -154,7 +154,7 @@ const Navbar = () => {
 
 
                                 {navigation.map((item) => (
-                                    <Link key={item.name} to={item.to} className={`flex items-center px-4 py-2 mt-3 rounded-md ${location.pathname === item.to ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
+                                    <Link key={item.name} to={item.to} className={`flex items-center px-2 py-1 mt-3 rounded-md ${location.pathname === item.to ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
                                         <span className="mx-4 font-medium">{item.name}</span>
                                     </Link>
                                 ))}
@@ -162,16 +162,16 @@ const Navbar = () => {
                                 {userContext?.user && (
                                     <>
                                         <hr className="my-6 border-gray-200 dark:border-gray-600" />
-                                        <Link to="/profile" className={`flex items-center px-4 py-2 mt-3 rounded-md ${location.pathname === "/profile" ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
+                                        <Link to="/profile" className={`flex items-center px-2 py-1 mt-3 rounded-md ${location.pathname === "/profile" ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
                                             <span className="mx-4 font-medium">Profile</span>
                                         </Link>
                                         {userContext.user.role !== "user" && (
-                                            <Link to="/create" className={`flex items-center px-4 py-2 mt-3 rounded-md ${location.pathname === "/create" ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
+                                            <Link to="/create" className={`flex items-center px-2 py-1 mt-3 rounded-md ${location.pathname === "/create" ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
                                                 <span className="mx-4 font-medium">Create New Blog</span>
                                             </Link>
                                         )}
                                         {userContext.user.role === "admin" && (
-                                            <Link to="/dashboard" className={`flex items-center px-4 py-2 mt-3 rounded-md ${location.pathname === "/dashboard" ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
+                                            <Link to="/dashboard" className={`flex items-center px-2 py-1 mt-3 rounded-md ${location.pathname === "/dashboard" ? "text-gray-700 bg-gray-100" : "text-gray-600 transition-colors duration-300 transform hover:bg-gray-100 hover:text-gray-700"}`}>
                                                 <span className="mx-4 font-medium">Dashboard</span>
                                             </Link>
                                         )}

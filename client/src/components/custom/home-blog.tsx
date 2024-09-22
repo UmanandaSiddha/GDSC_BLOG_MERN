@@ -43,8 +43,8 @@ const HomeBlog = () => {
     return (
         <>
             <div className="container px-6 py-8 mx-auto text-center max-w-[85%]">
-                <h1 className="text-3xl font-bold text-gray-800 dark:text-white lg:text-4xl">Browse by Category</h1>
-                <p className="mt-4 text-lg text-gray-500 dark:text-gray-300">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+                <h1 className="text-3xl font-gdg font-bold text-gray-800 dark:text-white lg:text-4xl">Browse by Category</h1>
+                {/* <p className="mt-4 text-lg text-gray-500 dark:text-gray-300">Lorem ipsum dolor sit amet consectetur adipisicing elit.</p> */}
             </div>
             <div className="flex flex-wrap items-center justify-center space-x-2 px-2 py-1 max-w-[85%] mx-auto gap-2">
                 <button

@@ -22,6 +22,8 @@ module.exports = {
     extend: {
       fontFamily: {
         roboto: ['Roboto', 'sans-serif'],
+        openSans: ['"Open Sans"', 'sans-serif'],
+        gdg: ['GDGonCampusTezpur', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

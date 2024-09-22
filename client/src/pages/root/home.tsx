@@ -23,31 +23,24 @@ const Home = () => {
 
             <div className='flex flex-col items-center justify-center bg-white dark:bg-gray-900'>
 
-                <div className="mt-32 md:mt-48 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
-                    <header className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center gap-4 text-center md:text-left">
-                        <div className="w-full md:w-1/3 flex justify-center md:justify-end mb-8 md:mb-0">
-                            <img
-                                src="/gdsc_color.png"
-                                alt="GDSC Logo"
-                                className="w-[80%] h-auto max-w-xs sm:max-w-sm md:max-w-xs lg:max-w-sm drop-shadow-2xl"
-                            />
-                        </div>
-                        <div className="w-full md:w-2/3 flex flex-col items-center md:items-start">
-                            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold font-roboto text-gray-900 mb-4 md:mb-6 leading-tight">
-                                Google <span className="text-blue-600">Students</span> Developers Club
+                <div className="mt-48 md:mt-32 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+                    <header className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center gap-4 text-center md:text-left">
+                        <img
+                            src="/gdsc_color.png"
+                            alt="GDSC Logo"
+                            className="w-[70%] md:w-[80%] h-auto max-w-xs sm:max-w-sm md:max-w-xs lg:max-w-sm drop-shadow-2xl"
+                        />
+                        <div className='mt-8 flex flex-col justify-center items-center'>
+                            <h1 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-semibold font-gdg text-gray-500 mb-4 md:mb-6 leading-tight">
+                                Google Developer Groups
                             </h1>
-                            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl mb-2 font-semibold text-gray-600">
-                                Tezpur University
-                            </p>
-                            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-500">
-                                A dedicated blog website for GDSC Tezpur University
-                            </p>
+                            <h3 className='sm:text-lg md:text-2xl lg:text-3xl xl:text-4xl text-gray-500 font-normal font-gdg'><span className='text-blue-400 font-semibold'>On Campus</span> • TEZPUR UNIVERSITY</h3>
                         </div>
                     </header>
 
-                    <button onClick={handleScroll} className='mt-24 mb-12 flex flex-col justify-center items-center'>
-                        <LuMouse size={30} />
-                        <span>Scroll Down</span>
+                    <button onClick={handleScroll} className='mt-12 mb-16 flex flex-col justify-center items-center'>
+                        <LuMouse size={30} className='text-gray-500 ' />
+                        <span className='text-gray-500 font-semibold'>Scroll Down</span>
                     </button>
                 </div>
 
